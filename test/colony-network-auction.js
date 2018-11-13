@@ -5,7 +5,7 @@ import bnChai from "bn-chai";
 
 import { getTokenArgs, web3GetTransactionReceipt, web3GetCode, checkErrorRevert, forwardTime, getBlockTime } from "../helpers/test-helper";
 import { giveUserCLNYTokens } from "../helpers/test-data-generator";
-import { SECONDS_PER_DAY } from "../helpers/constants";
+import { SECONDS_PER_DAY, WAD } from "../helpers/constants";
 
 const { expect } = chai;
 chai.use(bnChai(web3.utils.BN));
@@ -198,7 +198,7 @@ contract("ColonyNetworkAuction", accounts => {
         expect(differencePrices).to.be.lte.BN(errorMarginPrice);
 
         const totalToEndAuction = await tokenAuction.totalToEndAuction();
-        const amount = new BN(currentPriceString).mul(quantity).div(new BN(10).pow(new BN(18)));
+        const amount = new BN(currentPriceString).mul(quantity).div(WAD);
         const errorMarginQuantity = amount.divn(100);
         const differenceQuantity = totalToEndAuction.sub(amount);
         expect(differenceQuantity).to.be.lte.BN(errorMarginQuantity);
@@ -322,9 +322,7 @@ contract("ColonyNetworkAuction", accounts => {
 
       await tokenAuction.finalize();
       const receivedTotal = await tokenAuction.receivedTotal();
-      const endPrice = new BN(10)
-        .pow(new BN(18))
-        .mul(new BN(receivedTotal.toString(10)))
+      const endPrice = WAD.mul(new BN(receivedTotal.toString(10)))
         .div(quantity)
         .addn(1);
       const finalPrice = await tokenAuction.finalPrice();
@@ -435,9 +433,7 @@ contract("ColonyNetworkAuction", accounts => {
     it("sets correct final token price", async () => {
       await tokenAuction.finalize();
       const receivedTotal = await tokenAuction.receivedTotal();
-      const endPrice = new BN(10)
-        .pow(new BN(18))
-        .mul(new BN(receivedTotal.toString(10)))
+      const endPrice = WAD.mul(new BN(receivedTotal.toString(10)))
         .div(quantity)
         .addn(1);
       const finalPrice = await tokenAuction.finalPrice();
@@ -510,20 +506,14 @@ contract("ColonyNetworkAuction", accounts => {
       assert.equal(claimCount.toNumber(), 1);
 
       tokenBidderBalance = await token.balanceOf(BIDDER_1);
-      tokensToClaim = new BN(10)
-        .pow(new BN(18))
-        .mul(bidAmount1)
-        .div(new BN(finalPriceString));
+      tokensToClaim = WAD.mul(bidAmount1).div(new BN(finalPriceString));
       assert.equal(tokenBidderBalance.toString(10), tokensToClaim.toString());
 
       await tokenAuction.claim({ from: BIDDER_2 });
       claimCount = await tokenAuction.claimCount();
       assert.equal(claimCount.toNumber(), 2);
       tokenBidderBalance = await token.balanceOf(BIDDER_2);
-      tokensToClaim = new BN(10)
-        .pow(new BN(18))
-        .mul(bidAmount2)
-        .div(new BN(finalPriceString));
+      tokensToClaim = WAD.mul(bidAmount2).div(new BN(finalPriceString));
       assert.equal(tokenBidderBalance.toString(10), tokensToClaim.toString());
 
       const bid3 = await tokenAuction.bids(BIDDER_3);
@@ -532,10 +522,7 @@ contract("ColonyNetworkAuction", accounts => {
       assert.equal(claimCount.toNumber(), 3);
       tokenBidderBalance = await token.balanceOf(BIDDER_3);
       const bid3BN = new BN(bid3.toString(10));
-      tokensToClaim = new BN(10)
-        .pow(new BN(18))
-        .mul(bid3BN)
-        .div(new BN(finalPriceString));
+      tokensToClaim = WAD.mul(bid3BN).div(new BN(finalPriceString));
       assert.equal(tokenBidderBalance.toString(10), tokensToClaim.toString());
     });
 
